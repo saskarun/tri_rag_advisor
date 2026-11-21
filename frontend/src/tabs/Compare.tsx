@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
 import { Play, Loader2, Trophy } from 'lucide-react'
-import { api, ENGINES } from '../api'
+import { api, ENGINES, disabledSteps, stepLabel } from '../api'
+import type { Shared } from '../App'
 
 const COLORS = { standard: '#9ca3af', hyde: '#60a5fa', graph: '#a78bfa' } as const
 const SPEC: [string, string, string, string][] = [
@@ -12,7 +13,8 @@ const SPEC: [string, string, string, string][] = [
   ['Best enterprise use case', 'Single-document lookup (SOPs)', 'Vague regulatory inquiries', 'Complex Tax / M&A due diligence'],
 ]
 
-export default function Compare() {
+export default function Compare({ shared }: { shared: Shared }) {
+  const [useCustom, setUseCustom] = useState(false)
   const [d, setD] = useState<any>(null)
   const [err, setErr] = useState('')
   const timer = useRef<any>(undefined)
@@ -20,7 +22,9 @@ export default function Compare() {
   useEffect(() => { load(); return () => clearInterval(timer.current) }, [])
   useEffect(() => { clearInterval(timer.current); if (d?.state.running) timer.current = setInterval(load, 3000) }, [d?.state.running])
 
-  const run = async () => { setErr(''); try { await api.runBench(); await load() } catch (e: any) { setErr(e.message) } }
+  const customCount = ENGINES.reduce((n, e) => n + disabledSteps(shared.toggles[e.id]).length, 0)
+  const customDesc = ENGINES.filter(e => disabledSteps(shared.toggles[e.id]).length).map(e => `${e.short}: ${disabledSteps(shared.toggles[e.id]).map(stepLabel).join(', ')} off`).join(' · ')
+  const run = async () => { setErr(''); try { await api.runBench(useCustom ? shared.toggles : undefined); await load() } catch (e: any) { setErr(e.message) } }
   const st = d?.state, res = d?.result, sm = res?.summary
   const pct = st?.total ? Math.round((st.progress / st.total) * 100) : 0
 
@@ -54,6 +58,8 @@ export default function Compare() {
           <div className="flex items-center gap-3">
             {err && <span className="text-xs text-bad max-w-64">{err}</span>}
             {st?.error && <span className="text-xs text-bad max-w-64">{st.error}</span>}
+            {customCount > 0 && <label className="flex items-center gap-2 text-xs text-muted cursor-pointer select-none" title={customDesc}>
+              <input type="checkbox" checked={useCustom} onChange={e => setUseCustom(e.target.checked)} disabled={st?.running} />Use my custom pipeline ({customCount} step{customCount > 1 ? 's' : ''} off)</label>}
             <button className="btn btn-primary" onClick={run} disabled={st?.running}>{st?.running ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}{st?.running ? `Running ${pct}%` : 'Run benchmark'}</button>
           </div>
         </div>
@@ -70,6 +76,12 @@ export default function Compare() {
                     {v == null ? '—' : <span className={`inline-flex items-center gap-1.5 ${b === i ? 'text-good font-semibold' : ''}`}>{r.fmt(v)}{b === i && <Trophy size={11} />}</span>}</td>)}
                 </tr>) })}</tbody>
             </table>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs -mt-5">
+            <span className="text-muted">Pipelines benchmarked:</span>
+            {ENGINES.map(e => { const off: string[] = res.pipeline?.[e.id] ?? []; return off.length
+              ? <span key={e.id} className="border border-warn/40 text-warn rounded-full px-2.5 py-1">{e.short} custom: {off.map(o => '−' + stepLabel(o)).join(' ')}</span>
+              : <span key={e.id} className="border border-line text-muted rounded-full px-2.5 py-1">{e.short} default</span> })}
           </div>
           <p className="text-xs text-muted -mt-5">Entity-relation accuracy is a property of the graph index, so it is reported for Graph RAG only. Faithfulness is judged by an LLM and is approximate. Hyperparameters used: {Object.entries(res.hyperparams).map(([a, b]) => `${a}=${b}`).join(', ')}.</p>
 

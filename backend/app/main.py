@@ -1,6 +1,6 @@
 import collections, shutil, time
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -141,9 +141,10 @@ def get_kpis():
 
 
 @app.post("/api/benchmark/run")
-def bench_run(judge: bool = True):
+def bench_run(judge: bool = True, toggles: dict | None = Body(default=None, embed=True)):
+    """Optional body {"toggles": {engine: {nodes, edges}}} benchmarks the user's custom pipelines instead of the defaults."""
     if not get_registry().chunks: raise HTTPException(409, "No documents indexed.")
-    return {"started": benchmark.start(judge), **benchmark.STATE}
+    return {"started": benchmark.start(judge, toggles), **benchmark.STATE}
 
 
 @app.get("/api/benchmark")

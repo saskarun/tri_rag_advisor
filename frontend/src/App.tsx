@@ -22,13 +22,21 @@ export type Shared = {
   excludedNodes: string[]; setExcludedNodes: (x: string[]) => void
   excludedEdges: string[]; setExcludedEdges: (x: string[]) => void
   goto: (t: string) => void
+  wfEngine: string; setWfEngine: (e: string) => void   // engine shown in the Workflow tab
 }
 
 export default function App() {
   const [tab, setTab] = useState<string>('chat')
   const [dark, setDark] = useState(() => (localStorage.getItem('theme') ?? 'dark') === 'dark')
-  const [toggles, setToggleMap] = useState<Shared['toggles']>({})
-  const setToggles = (engine: string, t: Toggles) => setToggleMap(m => ({ ...m, [engine]: t }))
+  const [toggles, setToggleMap] = useState<Shared['toggles']>(() => {
+    try { return JSON.parse(localStorage.getItem('pipelineToggles') ?? '{}') } catch { return {} }   // survive page reloads
+  })
+  const [wfEngine, setWfEngine] = useState('graph')
+  const setToggles = (engine: string, t: Toggles) => setToggleMap(m => {
+    const next = { ...m, [engine]: t }
+    localStorage.setItem('pipelineToggles', JSON.stringify(next))
+    return next
+  })
   const [excludedNodes, setExcludedNodes] = useState<string[]>([])
   const [excludedEdges, setExcludedEdges] = useState<string[]>([])
   const [messages, setMessages] = useState<any[]>([])
@@ -38,7 +46,7 @@ export default function App() {
     localStorage.setItem('theme', dark ? 'dark' : 'light')
   }, [dark])
 
-  const shared: Shared = { toggles, setToggles, excludedNodes, setExcludedNodes, excludedEdges, setExcludedEdges, goto: setTab }
+  const shared: Shared = { toggles, setToggles, excludedNodes, setExcludedNodes, excludedEdges, setExcludedEdges, goto: setTab, wfEngine, setWfEngine }
 
   return (
     <div className="h-full flex flex-col">
@@ -65,7 +73,7 @@ export default function App() {
         {tab === 'graph' && <ErrorBoundary label="Knowledge graph" resetKey={dark}><GraphTab shared={shared} dark={dark} /></ErrorBoundary>}
         {tab === 'workflow' && <ErrorBoundary label="Workflow"><WorkflowTab shared={shared} /></ErrorBoundary>}
         {tab === 'kpi' && <ErrorBoundary label="Telemetry"><Dashboard /></ErrorBoundary>}
-        {tab === 'compare' && <ErrorBoundary label="Benchmark"><Compare /></ErrorBoundary>}
+        {tab === 'compare' && <ErrorBoundary label="Benchmark"><Compare shared={shared} /></ErrorBoundary>}
       </main>
     </div>
   )

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUp, Paperclip, FileText, X, Sparkles, Timer, ShieldCheck, ChevronDown, UploadCloud, Loader2 } from 'lucide-react'
-import { api, AREAS, ENGINES } from '../api'
+import { api, AREAS, ENGINES, disabledSteps, stepLabel } from '../api'
 import Markdown from '../components/Markdown'
 import type { Shared } from '../App'
 
@@ -50,7 +50,7 @@ export default function Chat({ shared, messages, setMessages }: { shared: Shared
         message: q, engine, practice_area: area, toggles: shared.toggles[engine],
         excluded_nodes: shared.excludedNodes, excluded_edges: shared.excludedEdges,
       })
-      setMessages((m: any[]) => [...m, { role: 'assistant', text: res.answer, res, engine, area }])
+      setMessages((m: any[]) => [...m, { role: 'assistant', text: res.answer, res, engine, area, custom: disabledSteps(shared.toggles[engine]) }])
     } catch (e: any) {
       setMessages((m: any[]) => [...m, { role: 'assistant', error: true, text: e.message }])
     } finally { setLoading(false) }
@@ -99,6 +99,9 @@ export default function Chat({ shared, messages, setMessages }: { shared: Shared
               <select className="pill-select" value={engine} onChange={e => setEngine(e.target.value)} title="RAG engine">
                 {ENGINES.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
               </select>
+              {disabledSteps(shared.toggles[engine]).length > 0 &&
+                <button className="text-[11.5px] text-warn border border-warn/40 rounded-full px-2.5 py-1 hover:bg-warn/10" title={'Switched off: ' + disabledSteps(shared.toggles[engine]).map(stepLabel).join(', ') + ' — click to edit'}
+                  onClick={() => { shared.setWfEngine(engine); shared.goto('workflow') }}>Custom pipeline · {disabledSteps(shared.toggles[engine]).length} off</button>}
               {engine === 'graph' && (shared.excludedNodes.length > 0 || shared.excludedEdges.length > 0) &&
                 <button className="text-[11.5px] text-warn border border-line rounded-full px-2.5 py-1" onClick={() => shared.goto('graph')}>
                   {shared.excludedNodes.length + shared.excludedEdges.length} graph filter(s)</button>}
@@ -141,6 +144,7 @@ function Message({ m }: { m: any }) {
       <Markdown text={m.text} onCite={n => { setShowSrc(true); setOpen(n) }} />
       <div className="mt-4 flex flex-wrap items-center gap-2 text-[11.5px] text-muted">
         <span className="border border-line rounded-full px-2.5 py-1 text-fg/80">{ENGINES.find(e => e.id === m.engine)?.label}</span>
+        {m.custom?.length > 0 && <span className="border border-warn/40 text-warn rounded-full px-2.5 py-1" title="This answer was produced with a modified pipeline">Custom pipeline: {m.custom.map((c: string) => '−' + stepLabel(c)).join(' ')}</span>}
         <span className="border border-line rounded-full px-2.5 py-1 flex items-center gap-1.5" title={`retrieval ${t.retrieval_ms} ms · graph ${t.graph_ms} ms · LLM ${t.llm_ms} ms`}>
           <Timer size={11} />{(t.total_ms / 1000).toFixed(1)}s <span className="opacity-60">· ret {t.retrieval_ms} · gr {t.graph_ms} · llm {t.llm_ms} ms</span></span>
         {f != null && <span className="border border-line rounded-full px-2.5 py-1 flex items-center gap-1.5" title={`${r.faithfulness.claims} claims judged by LLM`}>

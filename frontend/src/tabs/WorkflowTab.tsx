@@ -15,7 +15,7 @@ function StepNode({ data }: NodeProps) {
       <Handle id="b-out" type="source" position={Position.Bottom} className="!bg-muted !w-1.5 !h-1.5 !border-0" style={{ left: '70%' }} />
       <Handle id="b-in" type="target" position={Position.Bottom} className="!bg-muted !w-1.5 !h-1.5 !border-0" style={{ left: '30%' }} />
       <div className="flex items-center justify-between mb-1">
-        <span className="label !text-[10px]">Step {d.idx}</span>
+        <span className="label !text-[10px]">Step {d.idx}{d.parallel ? ' · parallel' : ''}</span>
         {d.locked ? <Lock size={11} className="text-muted" /> : <span className={`w-7 h-4 rounded-full relative transition-colors ${d.on ? 'bg-good' : 'bg-line'}`}><i className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${d.on ? 'left-3.5' : 'left-0.5'}`} /></span>}
       </div>
       <div className="text-[13.5px] font-semibold leading-tight">{d.label}</div>
@@ -33,7 +33,7 @@ const DEFAULT_Q: Record<string, string> = {
 }
 
 export default function WorkflowTab({ shared }: { shared: Shared }) {
-  const [engine, setEngine] = useState<string>('graph')
+  const engine = shared.wfEngine, setEngine = shared.setWfEngine
   const [wf, setWf] = useState<any>(null)
   const [qs, setQs] = useState<Record<string, string>>(DEFAULT_Q)
   const [area, setArea] = useState('deals')
@@ -51,8 +51,8 @@ export default function WorkflowTab({ shared }: { shared: Shared }) {
 
   const trace: Record<string, any> = useMemo(() => Object.fromEntries((run?.trace ?? []).map((t: any) => [t.node, t])), [run])
   const nodes = useMemo(() => (wf?.nodes ?? []).map((n: any, i: number) => ({
-    id: n.id, type: 'step', position: { x: i * 270, y: 60 }, draggable: false,
-    data: { ...n, idx: i + 1, on: n.locked ? true : (nOn[n.id] ?? true), trace: trace[n.id], onToggle: () => !n.locked && setNode(n.id) },
+    id: n.id, type: 'step', position: { x: (n.col ?? i) * 270, y: n.row != null ? n.row * 190 : 60 }, draggable: false,
+    data: { ...n, idx: (n.col ?? i) + 1, parallel: (wf.nodes as any[]).filter((m: any) => m.col === n.col).length > 1, on: n.locked ? true : (nOn[n.id] ?? true), trace: trace[n.id], onToggle: () => !n.locked && setNode(n.id) },
   })), [wf, nOn, trace])
   const edges = useMemo(() => (wf?.edges ?? []).map((e: any) => {
     const on = eOn[e.id] ?? true
@@ -91,7 +91,7 @@ export default function WorkflowTab({ shared }: { shared: Shared }) {
       </div>
       <div className="flex-1 min-h-[260px]">
         {wf && <ReactFlow key={engine} nodes={nodes} edges={edges} nodeTypes={nodeTypes} nodesConnectable={false}
-          onInit={i => setTimeout(() => i.fitView({ padding: 0.14, maxZoom: 1 }), 60)}
+          fitView fitViewOptions={{ padding: 0.12, maxZoom: 1 }} onInit={i => { setTimeout(() => i.fitView({ padding: 0.12, maxZoom: 1 }), 120); setTimeout(() => i.fitView({ padding: 0.12, maxZoom: 1 }), 450) }}
           onEdgeClick={(_, e) => toggleable && setEdge(e.id)} proOptions={{ hideAttribution: true }} minZoom={0.4}>
           <Background gap={22} size={1} color="var(--line)" /><Controls showInteractive={false} />
         </ReactFlow>}
