@@ -1,0 +1,37 @@
+{
+ "questions": [
+  {"id": "q1", "type": "keyword", "area": "tax",
+   "question": "What is the turnover threshold for mandatory e-invoicing under Rule 48(4)?",
+   "facts": ["INR 5 crore", "Rule 48(4)"],
+   "reference": "E-invoicing is mandatory above aggregate turnover of INR 5 crore under Rule 48(4)."},
+  {"id": "q2", "type": "keyword", "area": "grc",
+   "question": "Within how many working days must an STR be filed with FIU-IND?",
+   "facts": ["7 working days", "FIU-IND"],
+   "reference": "Within 7 working days of arriving at a conclusion of suspicion."},
+  {"id": "q3", "type": "vocabulary", "area": "tax",
+   "question": "How quickly must the tax authority's indirect-tax arm be notified of wrongly distributed common-service credits, and what interest applies to recovery?",
+   "facts": ["18 percent per annum", "Section 21"],
+   "reference": "Credit distributed to a wrong recipient is recovered with 18 percent per annum interest under Section 21."},
+  {"id": "q4", "type": "vocabulary", "area": "grc",
+   "question": "What is the cut-off ownership stake that triggers identification of the real controllers of a corporate customer?",
+   "facts": ["10 percent", "beneficial owner"],
+   "reference": "Beneficial owners holding more than 10 percent must be identified."},
+  {"id": "q5", "type": "multihop", "area": "deals",
+   "question": "The Seller in the Aster SPA is also a bank customer and an ISD registrant. What ISD-related tax exposure does the Seller's indemnity cover, and what is the interest rate and the indemnity cap?",
+   "facts": ["Section 21", "18 percent per annum", "15 percent of the Purchase Price", "INR 127.5 crore"],
+   "reference": "Indemnity covers pre-closing tax liabilities including ISD credit reversals under Section 21 (18% p.a. interest); capped at 15% of price = INR 127.5 crore."},
+  {"id": "q6", "type": "multihop", "area": "grc",
+   "question": "Meridian Industries Ltd. is a medium-risk customer of Prism Bank: how often must it be re-KYC'd, which control covers this, and what is the beneficial-owner threshold that applies?",
+   "facts": ["8 years", "C-07", "10 percent"],
+   "reference": "Medium risk: re-KYC every 8 years; Control C-07 (Re-KYC Tracker); beneficial owner threshold 10 percent."}
+ ],
+ "entity_links": [
+  {"mention": "CBDT", "canonical": "CBDT (Income Tax Dept)"},
+  {"mention": "Income Tax Dept.", "canonical": "CBDT (Income Tax Dept)"},
+  {"mention": "Tax Authority", "canonical": "CBDT (Income Tax Dept)"},
+  {"mention": "Reserve Bank of India", "canonical": "RBI"},
+  {"mention": "Input Service Distributor", "canonical": "Input Service Distributor (ISD)"},
+  {"mention": "Meridian Industries Ltd.", "canonical": "Meridian Industries Ltd.", "min_docs": 2},
+  {"mention": "Central Board of Indirect Taxes and Customs", "canonical": "CBIC"}
+ ]
+}

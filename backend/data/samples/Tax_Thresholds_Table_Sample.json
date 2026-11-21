@@ -1,0 +1,41 @@
+{
+  "title": "Tax thresholds and rates table (Sample)",
+  "rows": [
+    {
+      "item": "E-invoicing mandatory turnover threshold",
+      "value": "INR 5 crore",
+      "reference": "Rule 48(4) CGST Rules",
+      "authority": "CBIC"
+    },
+    {
+      "item": "ISD credit recovery interest rate",
+      "value": "18% per annum",
+      "reference": "Section 21 CGST Act",
+      "authority": "CBIC"
+    },
+    {
+      "item": "Penalty for ISD invoice default",
+      "value": "INR 25,000 per instance",
+      "reference": "Section 122 / Rule 54(1A)",
+      "authority": "CBIC"
+    },
+    {
+      "item": "Tax on transfer of unlisted shares (long term)",
+      "value": "12.5%",
+      "reference": "Section 112 Income Tax Act",
+      "authority": "CBDT"
+    },
+    {
+      "item": "TDS on payment to non-resident for share sale",
+      "value": "As per Section 195",
+      "reference": "Section 195 Income Tax Act",
+      "authority": "Income Tax Dept"
+    },
+    {
+      "item": "Beneficial owner threshold for companies",
+      "value": "10%",
+      "reference": "PML Rules Section 3(b)",
+      "authority": "RBI"
+    }
+  ]
+}
