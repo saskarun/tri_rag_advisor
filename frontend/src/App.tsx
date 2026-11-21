@@ -5,6 +5,7 @@ import GraphTab from './tabs/GraphTab'
 import WorkflowTab from './tabs/WorkflowTab'
 import Dashboard from './tabs/Dashboard'
 import Compare from './tabs/Compare'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const TABS = [
   { id: 'chat', label: 'Chat', icon: MessageSquare },
@@ -14,9 +15,10 @@ const TABS = [
   { id: 'compare', label: 'Benchmark', icon: Columns3 },
 ] as const
 
+export type Toggles = { nodes: Record<string, boolean>; edges: Record<string, boolean> }
 export type Shared = {
-  toggles: { nodes: Record<string, boolean>; edges: Record<string, boolean> }
-  setToggles: (t: Shared['toggles']) => void
+  toggles: Record<string, Toggles>   // keyed by engine id
+  setToggles: (engine: string, t: Toggles) => void
   excludedNodes: string[]; setExcludedNodes: (x: string[]) => void
   excludedEdges: string[]; setExcludedEdges: (x: string[]) => void
   goto: (t: string) => void
@@ -25,7 +27,8 @@ export type Shared = {
 export default function App() {
   const [tab, setTab] = useState<string>('chat')
   const [dark, setDark] = useState(() => (localStorage.getItem('theme') ?? 'dark') === 'dark')
-  const [toggles, setToggles] = useState<Shared['toggles']>({ nodes: {}, edges: {} })
+  const [toggles, setToggleMap] = useState<Shared['toggles']>({})
+  const setToggles = (engine: string, t: Toggles) => setToggleMap(m => ({ ...m, [engine]: t }))
   const [excludedNodes, setExcludedNodes] = useState<string[]>([])
   const [excludedEdges, setExcludedEdges] = useState<string[]>([])
   const [messages, setMessages] = useState<any[]>([])
@@ -58,11 +61,11 @@ export default function App() {
       </header>
       <main className="flex-1 min-h-0 relative">
         {/* Chat stays mounted so the conversation survives tab switches */}
-        <div className={tab === 'chat' ? 'h-full' : 'hidden'}><Chat shared={shared} messages={messages} setMessages={setMessages} /></div>
-        {tab === 'graph' && <GraphTab shared={shared} dark={dark} />}
-        {tab === 'workflow' && <WorkflowTab shared={shared} />}
-        {tab === 'kpi' && <Dashboard />}
-        {tab === 'compare' && <Compare />}
+        <div className={tab === 'chat' ? 'h-full' : 'hidden'}><ErrorBoundary label="Chat"><Chat shared={shared} messages={messages} setMessages={setMessages} /></ErrorBoundary></div>
+        {tab === 'graph' && <ErrorBoundary label="Knowledge graph" resetKey={dark}><GraphTab shared={shared} dark={dark} /></ErrorBoundary>}
+        {tab === 'workflow' && <ErrorBoundary label="Workflow"><WorkflowTab shared={shared} /></ErrorBoundary>}
+        {tab === 'kpi' && <ErrorBoundary label="Telemetry"><Dashboard /></ErrorBoundary>}
+        {tab === 'compare' && <ErrorBoundary label="Benchmark"><Compare /></ErrorBoundary>}
       </main>
     </div>
   )

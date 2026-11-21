@@ -16,6 +16,13 @@ RECENT = collections.deque(maxlen=50)  # live KPI telemetry from chat
 ENGINES = {"standard": standard.answer, "hyde": hyde.answer, "graph": graph_rag.answer}
 
 
+@app.on_event("startup")
+def _warm():
+    # load/rebuild the corpus in the background so the first page load doesn't wait on it
+    import threading
+    threading.Thread(target=get_registry, daemon=True).start()
+
+
 class ChatReq(BaseModel):
     message: str
     engine: str = "graph"
@@ -115,9 +122,14 @@ def put_config(body: dict):
     return {"hyperparams": config.HYPERPARAMS, "needs_reindex": changed_chunks}
 
 
+WORKFLOWS = {"standard": standard, "hyde": hyde, "graph": graph_rag}
+
+
 @app.get("/api/workflow")
-def workflow():
-    return {"nodes": graph_rag.NODES, "edges": graph_rag.EDGES}
+def workflow(engine: str = "graph"):
+    m = WORKFLOWS.get(engine)
+    if not m: raise HTTPException(400, "engine must be standard|hyde|graph")
+    return {"engine": engine, "nodes": m.NODES, "edges": m.EDGES, "blurb": m.BLURB}
 
 
 @app.get("/api/kpis")

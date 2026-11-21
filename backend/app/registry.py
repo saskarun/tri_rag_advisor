@@ -90,9 +90,12 @@ class Registry:
 
 
 _reg: Registry | None = None
+_reg_lock = threading.Lock()  # concurrent first requests must not each build (and reindex) their own Registry
 
 
 def get_registry() -> Registry:
     global _reg
-    if _reg is None: _reg = Registry()
+    if _reg is None:
+        with _reg_lock:
+            if _reg is None: _reg = Registry()
     return _reg

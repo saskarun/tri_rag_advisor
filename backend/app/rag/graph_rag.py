@@ -19,7 +19,7 @@ NODES = [
     {"id": "hybrid_search", "label": "Hybrid Vector/Graph Search", "desc": "Dense HNSW + BM25 + k-hop knowledge-graph traversal. Off = dense vector only."},
     {"id": "rrf_fusion", "label": "RRF Fusion", "desc": "Reciprocal Rank Fusion of dense, sparse and graph rank lists."},
     {"id": "rerank", "label": "Rerank", "desc": "Cosine re-scoring with a graph-proximity bonus."},
-    {"id": "synthesis", "label": "Synthesis", "desc": "CO-STAR prompt + guardrails generate the cited answer. Always runs."},
+    {"id": "synthesis", "label": "Synthesis", "desc": "CO-STAR prompt + guardrails generate the cited answer. Always runs.", "locked": True},
 ]
 EDGES = [
     {"id": "e_qe_hs", "source": "query_expansion", "target": "hybrid_search"},
@@ -28,6 +28,7 @@ EDGES = [
     {"id": "e_rr_syn", "source": "rerank", "target": "synthesis"},
     {"id": "e_loop", "source": "rrf_fusion", "target": "hybrid_search", "loop": True},
 ]
+BLURB = "Hybrid dense + BM25 + k-hop knowledge-graph retrieval, fused and reranked, with a re-seed cycle."
 _INCOMING = {"query_expansion": None, "hybrid_search": "e_qe_hs", "rrf_fusion": "e_hs_rrf", "rerank": "e_rrf_rr", "synthesis": "e_rr_syn"}
 
 

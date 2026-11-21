@@ -3,6 +3,7 @@ import ForceGraph3D from 'react-force-graph-3d'
 import SpriteText from 'three-spritetext'
 import { RotateCcw, Network } from 'lucide-react'
 import { api } from '../api'
+import SphereCanvas from '../components/SphereCanvas'
 import type { Shared } from '../App'
 
 const TYPE_COLORS: Record<string, string> = {
@@ -11,6 +12,10 @@ const TYPE_COLORS: Record<string, string> = {
 }
 const R = 150
 
+function hasWebGL() {
+  try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')) } catch { return false }
+}
+
 export default function GraphTab({ shared, dark }: { shared: Shared; dark: boolean }) {
   const [data, setData] = useState<any>(null)
   const [sel, setSel] = useState<any>(null)
@@ -18,6 +23,7 @@ export default function GraphTab({ shared, dark }: { shared: Shared; dark: boole
   const wrap = useRef<HTMLDivElement>(null)
   const fg = useRef<any>(null)
   const interacting = useRef(false)
+  const webgl = useMemo(hasWebGL, [])
   const exN = new Set(shared.excludedNodes), exE = new Set(shared.excludedEdges)
 
   useEffect(() => { api.graph().then(setData) }, [])
@@ -40,7 +46,7 @@ export default function GraphTab({ shared, dark }: { shared: Shared; dark: boole
   useEffect(() => { // slow orbit until the user grabs the canvas
     let a = 0
     const t = setInterval(() => {
-      if (interacting.current || !fg.current) return
+      if (!webgl || interacting.current || !fg.current) return
       a += 0.004; fg.current.cameraPosition({ x: 380 * Math.sin(a), y: 60, z: 380 * Math.cos(a) })
     }, 30)
     return () => clearInterval(t)
@@ -56,6 +62,8 @@ export default function GraphTab({ shared, dark }: { shared: Shared; dark: boole
       <div ref={wrap} className="flex-1 relative min-w-0" onPointerDown={() => (interacting.current = true)}>
         {graph.nodes.length === 0
           ? <div className="h-full grid place-items-center text-muted text-sm"><div className="text-center"><Network className="mx-auto mb-3" />No graph yet — load documents in the Chat tab.</div></div>
+          : !webgl ? <SphereCanvas nodes={graph.nodes} links={graph.links} colors={TYPE_COLORS} exN={exN} exE={exE} dark={dark}
+              onNode={(n: any) => { toggleNode(n.id); setSel(n) }} onLink={(l: any) => toggleEdge(l.id)} />
           : <ForceGraph3D ref={fg} width={size.w} height={size.h} graphData={graph} backgroundColor="rgba(0,0,0,0)" showNavInfo={false}
               cooldownTicks={0} enableNodeDrag={false}
               nodeLabel={(n: any) => `${n.id} · ${n.type}`} nodeRelSize={5}
@@ -76,6 +84,7 @@ export default function GraphTab({ shared, dark }: { shared: Shared; dark: boole
         <div className="absolute left-5 top-4 pointer-events-none">
           <div className="text-[15px] font-semibold">Knowledge graph</div>
           <div className="text-xs text-muted mt-0.5">Click a node or edge to exclude it from Graph RAG retrieval. Drag to rotate.</div>
+          {!webgl && <div className="text-[11px] text-warn mt-1">WebGL unavailable in this browser — showing the software-rendered sphere view.</div>}
         </div>
       </div>
 

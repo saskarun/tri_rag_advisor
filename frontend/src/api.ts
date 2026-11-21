@@ -17,7 +17,7 @@ export const api = {
   reindex: () => fetch('/api/reindex', { method: 'POST' }).then(j),
   chat: (b: unknown) => fetch('/api/chat', json('POST', b)).then(j),
   graph: () => fetch('/api/graph').then(j),
-  workflow: () => fetch('/api/workflow').then(j),
+  workflow: (engine: string) => fetch(`/api/workflow?engine=${engine}`).then(j),
   config: () => fetch('/api/config').then(j),
   setConfig: (b: unknown) => fetch('/api/config', json('PUT', b)).then(j),
   kpis: () => fetch('/api/kpis').then(j),

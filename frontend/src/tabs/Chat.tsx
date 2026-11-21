@@ -47,7 +47,7 @@ export default function Chat({ shared, messages, setMessages }: { shared: Shared
     setMessages((m: any[]) => [...m, { role: 'user', text: q }])
     try {
       const res = await api.chat({
-        message: q, engine, practice_area: area, toggles: shared.toggles,
+        message: q, engine, practice_area: area, toggles: shared.toggles[engine],
         excluded_nodes: shared.excludedNodes, excluded_edges: shared.excludedEdges,
       })
       setMessages((m: any[]) => [...m, { role: 'assistant', text: res.answer, res, engine, area }])
